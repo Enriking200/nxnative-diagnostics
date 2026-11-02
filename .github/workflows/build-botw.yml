@@ -1,0 +1,37 @@
+name: Build BOTW IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: xcode-27
+
+    steps:
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.2_Release_Candidate.app
+          xcodebuild -version
+
+      - name: Free simulator storage
+        run: |
+          xcrun simctl runtime delete all || true
+          xcrun simctl delete unavailable || true
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          brew install xcodegen zstd glslang
+          brew install --cask dotnet-sdk
+          python3 -m pip install --break-system-packages \
+            lz4 "capstone>=5,<6" fonttools nsz zbic \
+            "backports.zstd; python_version < '3.14'"
+
+      - name: Checkout nxnative
+        run: |
+          git clone https://github.com/seedds/nxnative.git
+          cd nxnative
+          xcodebuild -downloadComponent MetalToolchain
