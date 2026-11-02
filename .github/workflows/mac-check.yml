@@ -1,5 +1,5 @@
 
-name: macOS Storage Optimization Test
+name: macOS Runtime Inspection
 
 on:
   workflow_dispatch:
@@ -8,37 +8,27 @@ permissions:
   contents: read
 
 jobs:
-  optimize:
+  inspect:
     runs-on: xcode-27
 
     steps:
-      - name: Inspect Xcode installations
-        run: |
-          echo "=== Installed Xcodes ==="
-          ls -ld /Applications/Xcode*.app
-
-          echo "=== Xcode sizes ==="
-          du -sh /Applications/Xcode*.app
-
       - name: Select Xcode 27.2
         run: |
           sudo xcode-select -s /Applications/Xcode_27.2_Release_Candidate.app
           xcodebuild -version
-          xcrun --find metal
 
-      - name: Remove unused Xcode versions
-        run: |
-          sudo rm -rf /Applications/Xcode_27.app
-          sudo rm -rf /Applications/Xcode_27.1.app
-
-      - name: Check simulator storage
+      - name: Inspect simulator runtimes
         run: |
           echo "=== Simulator runtimes ==="
           xcrun simctl runtime list
 
-      - name: Final storage
-        run: |
-          echo "=== Available disk ==="
-          df -h /
-          diskutil info /
+          echo "=== Simulator devices ==="
+          xcrun simctl list devices available
 
+      - name: Inspect storage
+        run: |
+          echo "=== Disk space ==="
+          df -h /
+
+          echo "=== Disk images ==="
+          hdiutil info
