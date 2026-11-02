@@ -1,5 +1,5 @@
 
-name: macOS Storage Diagnostic
+name: macOS Storage Optimization Test
 
 on:
   workflow_dispatch:
@@ -8,43 +8,37 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
+  optimize:
     runs-on: xcode-27
 
     steps:
-      - name: System information
+      - name: Inspect Xcode installations
         run: |
-          echo "=== macOS ==="
-          sw_vers
+          echo "=== Installed Xcodes ==="
+          ls -ld /Applications/Xcode*.app
 
-          echo "=== Architecture ==="
-          uname -m
+          echo "=== Xcode sizes ==="
+          du -sh /Applications/Xcode*.app
 
-          echo "=== Disk space ==="
+      - name: Select Xcode 27.2
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.2_Release_Candidate.app
+          xcodebuild -version
+          xcrun --find metal
+
+      - name: Remove unused Xcode versions
+        run: |
+          sudo rm -rf /Applications/Xcode_27.app
+          sudo rm -rf /Applications/Xcode_27.1.app
+
+      - name: Check simulator storage
+        run: |
+          echo "=== Simulator runtimes ==="
+          xcrun simctl runtime list
+
+      - name: Final storage
+        run: |
+          echo "=== Available disk ==="
           df -h /
-
-          echo "=== Disk details ==="
           diskutil info /
 
-      - name: Xcode version
-        run: |
-          echo "=== Xcode ==="
-          xcodebuild -version
-
-          echo "=== Available SDKs ==="
-          xcodebuild -showsdks
-
-          echo "=== Metal compiler ==="
-          xcrun --find metal || true
-
-      - name: Storage calculation
-        run: |
-          AVAILABLE=$(df -k / | awk 'NR==2 {print $4}')
-          echo "Available KB: $AVAILABLE"
-          echo "Available GB: $((AVAILABLE / 1024 / 1024))"
-
-          if [ "$AVAILABLE" -ge 44040192 ]; then
-            echo "Enough initial space for a 16 GB game estimate."
-          else
-            echo "INSUFFICIENT SPACE for the estimated 42 GB requirement."
-          fi
