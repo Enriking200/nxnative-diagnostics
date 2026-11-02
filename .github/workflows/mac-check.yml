@@ -1,0 +1,50 @@
+
+name: macOS Storage Diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: xcode-27
+
+    steps:
+      - name: System information
+        run: |
+          echo "=== macOS ==="
+          sw_vers
+
+          echo "=== Architecture ==="
+          uname -m
+
+          echo "=== Disk space ==="
+          df -h /
+
+          echo "=== Disk details ==="
+          diskutil info /
+
+      - name: Xcode version
+        run: |
+          echo "=== Xcode ==="
+          xcodebuild -version
+
+          echo "=== Available SDKs ==="
+          xcodebuild -showsdks
+
+          echo "=== Metal compiler ==="
+          xcrun --find metal || true
+
+      - name: Storage calculation
+        run: |
+          AVAILABLE=$(df -k / | awk 'NR==2 {print $4}')
+          echo "Available KB: $AVAILABLE"
+          echo "Available GB: $((AVAILABLE / 1024 / 1024))"
+
+          if [ "$AVAILABLE" -ge 44040192 ]; then
+            echo "Enough initial space for a 16 GB game estimate."
+          else
+            echo "INSUFFICIENT SPACE for the estimated 42 GB requirement."
+          fi
