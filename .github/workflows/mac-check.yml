@@ -17,13 +17,17 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_27.2_Release_Candidate.app
           xcodebuild -version
 
-      - name: Inspect simulator runtimes
+      - name: Free simulator storage
         run: |
-          echo "=== Simulator runtimes ==="
+          echo "=== Deleting simulator runtimes ==="
+          xcrun simctl runtime delete all
+          xcrun simctl delete unavailable || true
+
+          echo "=== Remaining runtimes ==="
           xcrun simctl runtime list
 
-          echo "=== Simulator devices ==="
-          xcrun simctl list devices available
+          echo "=== Available disk space ==="
+          df -h /
 
       - name: Inspect storage
         run: |
