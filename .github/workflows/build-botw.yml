@@ -1,3 +1,5 @@
+
+
 name: Build BOTW IPA
 
 on:
@@ -20,7 +22,6 @@ jobs:
         run: |
           xcrun simctl runtime delete all || true
           xcrun simctl delete unavailable || true
-          df -h /
 
       - name: Install dependencies
         run: |
